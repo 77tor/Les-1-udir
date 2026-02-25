@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oppgavesett - iPad Optimalisert</title>
+<link rel="icon" type="image/png" href="LES.png">
+<link rel="apple-touch-icon" href="LES.png">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            background: #f4f4f9; 
+            padding: 10px;
+            box-sizing: border-box;
+            /* Gir plass til den faste menyen nederst */
+            padding-bottom: 120px; 
+        }
+
+        .container { 
+            width: 98%; 
+            max-width: 1400px; 
+            margin: 10px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
+        }
+
+        .instruction-section { 
+            margin-bottom: 25px; 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #ddd;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        audio { width: 100%; }
+        
+        #textDisplay {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .image-container { 
+            position: relative; 
+            display: inline-block; 
+            width: 100%; 
+        }
+        img.main-img { 
+            width: 100%; 
+            height: auto; 
+            border: 2px solid #333; 
+            border-radius: 5px;
+        }
+
+        #click-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: rgba(52, 152, 219, 0.6);
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .support-img {
+            max-width: 400px;
+            width: 80%;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .options-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+        }
+        .opt-btn { 
+            padding: 15px; 
+            cursor: pointer; 
+            border: 2px solid #ddd; 
+            border-radius: 12px; 
+            background: white;
+            font-size: 1.2rem;
+        }
+        
+        .opt-btn.selected {
+            border-color: #3498db;
+            background: #ebf5fb;
+            box-shadow: inset 0 0 5px rgba(52,152,219,0.3);
+        }
+
+        /* FAST NAVIGASJON NEDERST */
+        .nav-footer { 
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 15px 10px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .dots-container { 
+            display: flex; 
+            justify-content: center; 
+            gap: 8px; 
+            flex-grow: 1;
+            flex-wrap: wrap;
+        }
+
+        .dot { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            border: 1px solid #ccc; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            background: white; 
+            font-weight: bold;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .dot.active { background: #3498db; color: white; border-color: #3498db; }
+        .dot.completed { border-color: #7f8c8d; background: #ecf0f1; }
+
+        .btn-nav { 
+            padding: 12px 20px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 8px; 
+            color: white;
+            min-width: 100px;
+        }
+        #prevBtn { background: #95a5a6; }
+        #nextBtn { background: #2ecc71; }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .summary-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .res-correct { background: #e8f8f5; border: 1px solid #2ecc71; color: #27ae60; }
+        .res-wrong { background: #fdedec; border: 1px solid #e74c3c; color: #c0392b; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-wrap" class="container">
+    <div class="instruction-section">
+        <audio id="audioPlayer" controls></audio>
+        <div id="textDisplay" class="hidden"></div>
+    </div>
+
+    <div id="support-image-container">
+        <img id="supportImage" class="support-img hidden" src="" alt="Støttebilde">
+    </div>
+
+    <div id="hotspot-area" class="image-container">
+        <img src="" alt="" id="taskImage" class="main-img">
+        <div id="click-marker"></div>
+    </div>
+
+    <div id="options-area" class="options-grid hidden"></div>
+
+    <div class="nav-footer">
+        <div class="nav-inner">
+            <button class="btn-nav" id="prevBtn" onclick="changeTask(-1)">Forrige</button>
+            
+            <div class="dots-container" id="dots"></div>
+            
+            <button class="btn-nav" id="nextBtn" onclick="changeTask(1)">Neste</button>
+        </div>
+    </div>
+</div>
+
+<div id="result-page" class="container hidden">
+    <h1>Resultat</h1>
+    <h2 id="final-score"></h2>
+    <div id="summary-list" style="display: inline-block; width: 100%; max-width: 700px;"></div>
+    <br><br>
+    <button class="btn-nav" style="background: #3498db; max-width: 300px; color: white;" onclick="location.reload()">Start på nytt</button>
+</div>
+
+<script>
+    const taskData = [
+        { id: 1, type: 'hotspot', img: "01.png", audio: "jenta.mp3", target: { xMin: 48, xMax: 55, yMin: 28, yMax: 50 } },
+        { id: 2, type: 'hotspot', img: "02.png", audio: "sola.mp3", target: { xMin: 71, xMax: 76, yMin: 4, yMax: 15 } },
+        { id: 3, type: 'choice', audio: "tiger.mp3", options: ["03_01.png", "03_02.png", "03_03.png", "03_04.png"], correct: 0, isImage: true },
+        { id: 4, type: 'choice', audio: "skilpadde.mp3", options: ["04_01.png", "04_02.png", "04_03.png", "04_04.png"], correct: 1, isImage: true },
+        { id: 5, type: 'choice', audio: "benk.mp3", supportImg: "05.png", options: ["blunk", "bank", "bekk", "benk"], correct: 3, isImage: false },
+        { id: 6, type: 'choice', textInstruction: "Ali bader i bassenget.", options: ["06_01.png", "06_02.png", "06_03.png", "06_04.png"], correct: 2, isImage: true },
+        { id: 7, type: 'choice', audio: "kniv.mp3", supportImg: "07.png", options: ["kiv", "vink", "kvin", "kniv"], correct: 3, isImage: false },
+        { id: 8, type: 'choice', textInstruction: "Elgen står på broa.", options: ["08_01.png", "08_02.png", "08_03.png", "08_04.png"], correct: 3, isImage: true }
+    ];
+
+    let currentIdx = 0;
+    let userChoices = new Array(taskData.length).fill(null);
+
+    function loadTask() {
+        const task = taskData[currentIdx];
+        const player = document.getElementById('audioPlayer');
+        const textDisplay = document.getElementById('textDisplay');
+        const supportImage = document.getElementById('supportImage');
+        const marker = document.getElementById('click-marker');
+        
+        marker.style.display = "none";
+        window.scrollTo(0,0); // Scroller til toppen når man bytter oppgave
+
+        if (task.audio) {
+            player.classList.remove('hidden');
+            textDisplay.classList.add('hidden');
+            player.src = task.audio;
+            player.load();
+        } else if (task.textInstruction) {
+            player.classList.add('hidden');
+            textDisplay.classList.remove('hidden');
+            textDisplay.innerText = task.textInstruction;
+            player.pause();
+        }
+
+        if (task.supportImg) {
+            supportImage.src = task.supportImg;
+            supportImage.classList.remove('hidden');
+        } else {
+            supportImage.classList.add('hidden');
+        }
+        
+        if (task.type === 'hotspot') {
+            document.getElementById('hotspot-area').classList.remove('hidden');
+            document.getElementById('options-area').classList.add('hidden');
+            document.getElementById('taskImage').src = task.img;
+            
+            if (userChoices[currentIdx]) {
+                marker.style.left = userChoices[currentIdx].x + "%";
+                marker.style.top = userChoices[currentIdx].y + "%";
+                marker.style.display = "block";
+            }
+        } else {
+            document.getElementById('hotspot-area').classList.add('hidden');
+            document.getElementById('options-area').classList.remove('hidden');
+            renderOptions(task);
+        }
+        updateNav();
+    }
+
+    function renderOptions(task) {
+        const area = document.getElementById('options-area');
+        area.innerHTML = "";
+        task.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "opt-btn";
+            if (userChoices[currentIdx] === idx) btn.classList.add('selected');
+
+            btn.innerHTML = task.isImage ? `<img src="${opt}" style="width:100%; border-radius:5px;">` : opt;
+            btn.onclick = () => {
+                userChoices[currentIdx] = idx;
+                renderOptions(task);
+                updateNav();
+            };
+            area.appendChild(btn);
+        });
+    }
+
+    document.getElementById('hotspot-area').onclick = function(e) {
+        if (taskData[currentIdx].type !== 'hotspot') return;
+        const rect = this.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        userChoices[currentIdx] = { x: x, y: y };
+        
+        const marker = document.getElementById('click-marker');
+        marker.style.left = x + "%";
+        marker.style.top = y + "%";
+        marker.style.display = "block";
+        
+        updateNav();
+    };
+
+    function updateNav() {
+        const dots = document.getElementById('dots');
+        dots.innerHTML = "";
+        taskData.forEach((_, i) => {
+            const d = document.createElement('div');
+            d.className = `dot ${i === currentIdx ? 'active' : ''} ${userChoices[i] !== null ? 'completed' : ''}`;
+            d.innerText = i + 1;
+            d.onclick = () => { currentIdx = i; loadTask(); };
+            dots.appendChild(d);
+        });
+
+        document.getElementById('prevBtn').disabled = currentIdx === 0;
+        document.getElementById('nextBtn').innerText = (currentIdx === taskData.length - 1) ? "Lever" : "Neste";
+    }
+
+    function changeTask(step) {
+        if (step === 1 && currentIdx === taskData.length - 1) {
+            showResults();
+        } else {
+            currentIdx += step;
+            loadTask();
+        }
+    }
+
+    function showResults() {
+        document.getElementById('quiz-wrap').classList.add('hidden');
+        document.getElementById('result-page').classList.remove('hidden');
+        window.scrollTo(0,0);
+        
+        let score = 0;
+        const list = document.getElementById('summary-list');
+        list.innerHTML = "";
+
+        taskData.forEach((task, i) => {
+            let isCorrect = false;
+            let displaySvar = "Ikke besvart";
+
+            if (userChoices[i] !== null) {
+                if (task.type === 'hotspot') {
+                    const choice = userChoices[i];
+                    const t = task.target;
+                    isCorrect = (choice.x >= t.xMin && choice.x <= t.xMax && choice.y >= t.yMin && choice.y <= t.yMax);
+                    displaySvar = "Markert i bilde";
+                } else {
+                    isCorrect = (userChoices[i] === task.correct);
+                    displaySvar = task.isImage ? `Bilde nr. ${userChoices[i] + 1}` : task.options[userChoices[i]];
+                }
+            }
+
+            if (isCorrect) score++;
+
+            const item = document.createElement('div');
+            item.className = `summary-item ${isCorrect ? 'res-correct' : 'res-wrong'}`;
+            item.innerHTML = `<strong>Oppgave ${i+1}:</strong> ${isCorrect ? 'Riktig ✅' : 'Feil ❌'} <br> <small>Ditt valg: ${displaySvar}</small>`;
+            list.appendChild(item);
+        });
+
+        document.getElementById('final-score').innerText = `Du fikk ${score} av ${taskData.length} riktige!`;
+    }
+
+    loadTask();
+</script>
+
+</body>
+</html>
