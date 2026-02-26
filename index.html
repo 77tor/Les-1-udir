@@ -47,7 +47,19 @@
             align-items: center;
             justify-content: center;
         }
-        audio { width: 100%; }
+        audio { 
+    width: 100%; 
+    max-width: 500px; 
+    display: block;
+    margin: 20px auto;
+    
+    /* Dette forstørrer hele elementet inkludert knapper */
+    transform: scale(1.5); 
+    
+    /* Justerer plassen rundt siden den nå "stikker ut" litt mer */
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
         
         #textDisplay {
             font-size: 1.8rem;
@@ -378,4 +390,5 @@
 </script>
 
 </body>
+
 </html>
